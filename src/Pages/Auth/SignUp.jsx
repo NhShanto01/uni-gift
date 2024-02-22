@@ -1,31 +1,48 @@
-import React from 'react';
+import React, { useRef } from 'react';
 import './Auth.css'
 import reg from '../../image/signUp.jpg'
 import { Link, useNavigate } from 'react-router-dom';
-import { useCreateUserWithEmailAndPassword } from 'react-firebase-hooks/auth';
-import {auth} from '../../firebase';
+import { useCreateUserWithEmailAndPassword, useUpdateProfile } from 'react-firebase-hooks/auth';
+import { auth } from '../../firebase';
+import Loading from '../Shared/Loading';
+
 
 
 const SignUp = () => {
+    const nameRef = useRef('');
+    const emailRef = useRef('');
+    const passwordRef = useRef('');
     const [
         createUserWithEmailAndPassword,
-        // user,
-        // loading,
-        // error,
-      ] = useCreateUserWithEmailAndPassword(auth);
+        user,
+        loading,
+        error,
+      ] = useCreateUserWithEmailAndPassword(auth,{sendEmailVerification:true});
+      const [updateProfile, updating, profileEerror] = useUpdateProfile(auth);
     const navigate = useNavigate();
+    if(loading || updating){
+        return <Loading></Loading>
+      }
 
-    const handleRegister = event => {
+    const handleRegister = async (event) => {
         event.preventDefault();
-        // const name = event.current.value;
-        const email = event.current.value;
-        const password = event.current.value;
-        // const confirmPassword = event.current.value;
-        createUserWithEmailAndPassword(email,password);
+        const name = nameRef.current.value;
+        const email = emailRef.current.value;
+        const password = passwordRef.current.value;
+        await createUserWithEmailAndPassword(email,password);
+        await updateProfile({ displayName:name });
+        navigate('/');
+        // await updateProfile({ displayName, photoURL });
+        // console.log(name,email,password);
     }
 
     const navigateSignin = event =>{
         navigate('/signin');
+    }
+
+    if(user){
+        // navigate('/');
+        console.log('user',user);
     }
     return (
         <div>
@@ -40,19 +57,19 @@ const SignUp = () => {
                                 {/* <!-- Email input --> */}
                                 <div className="form-outline mb-4">
                                 <label className="form-label" for="form1Example13">Your Name</label>
-                                    <input type="text" id="form1Example13" className="form-control form-control-lg" required/>
+                                    <input type="text" ref={nameRef} id="form1Example13" className="form-control form-control-lg" required/>
                                     
                                 </div>
                                 <div className="form-outline mb-4">
                                 <label className="form-label" for="form1Example13">Email address</label>
-                                    <input type="email" id="form1Example13" className="form-control form-control-lg" required/>
+                                    <input ref={emailRef} type="email" id="form1Example13" className="form-control form-control-lg" required />
                                     
                                 </div>
 
                                 {/* <!-- Password input --> */}
                                 <div className="form-outline mb-4">
                                     <label className="form-label" for="form1Example23">Password</label>
-                                    <input type="password" id="form1Example23" className="form-control form-control-lg" required/>
+                                    <input type="password" ref={passwordRef} id="form1Example13" className="form-control form-control-lg" required/>
                                     
                                 </div>
 

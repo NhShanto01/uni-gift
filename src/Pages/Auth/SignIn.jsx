@@ -1,23 +1,50 @@
 import React, { useRef } from 'react';
 import './Auth.css'
 import log from '../../image/signIn.jpg'
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
+import { useSendPasswordResetEmail, useSignInWithEmailAndPassword } from 'react-firebase-hooks/auth';
+import { auth } from '../../firebase';
+import Loading from '../Shared/Loading';
 
 
 const SignIn = () => {
     const emailRef = useRef('');
     const passwordRef = useRef('');
     const navigate = useNavigate();
+    const [
+        signInWithEmailAndPassword,
+        user,
+        loading,
+        error,
+      ] = useSignInWithEmailAndPassword(auth);
+      const [sendPasswordResetEmail, sending] = useSendPasswordResetEmail( auth );
+
+      const location = useLocation();
+      let from = location.state?.from?.pathname || "/";
+
+      if(user) {
+        navigate(from, {replace:true});
+      }
+      if(loading){
+        return <Loading></Loading>
+      }
 
     const handleSubmit = event => {
         event.preventDefault();
         const email = emailRef.current.value;
         const password = passwordRef.current.value;
-        console.log(email, password);
+        // console.log(email, password);
+        signInWithEmailAndPassword(email, password);
     }
 
     const navigateSignup = event =>{
         navigate('/signup');
+    }
+
+    const resetPassword = async () => {
+        const email = emailRef.current.value;
+        await sendPasswordResetEmail(email) ;
+        alert("Check your inbox for the link to reset your password.") 
     }
     return (
         <div>            
@@ -50,7 +77,7 @@ const SignIn = () => {
                                         <input className="form-check-input" type="checkbox" value="" id="form1Example3"/>
                                         <label className="form-check-label" for="form1Example3"> Remember me</label>
                                     </div>
-                                    <a href="# " className='text-danger' style={{textDecoration: 'none'}}>Forgot password?</a>
+                                    <a href="# " onClick={resetPassword} className='text-danger' style={{textDecoration: 'none'}}>Forgot password?</a>
                                 </div>
 
                                 {/* <!-- Submit button --> */}
